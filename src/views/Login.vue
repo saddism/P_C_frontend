@@ -35,7 +35,7 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
 export default {
-  name: 'Login',
+  name: 'UserLogin',
   setup() {
     const router = useRouter()
     const loginForm = ref(null)
