@@ -7,7 +7,7 @@ export const isMockMode = () => {
 };
 
 export const api = axios.create({
-  baseURL: isMockMode() ? '' : BASE_URL
+  baseURL: isMockMode() ? '/api/auth' : BASE_URL + '/api/auth'
 });
 
 // Add response interceptor to handle common error cases
@@ -15,10 +15,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Return the error response for component-level handling
+      console.error('API Error:', {
+        url: error.config.url,
+        method: error.config.method,
+        status: error.response.status,
+        data: error.response.data
+      });
       return Promise.reject(error);
     }
-    // Network error or other issues
+    console.error('Network Error:', error);
     return Promise.reject(new Error('网络错误，请稍后重试'));
   }
 );

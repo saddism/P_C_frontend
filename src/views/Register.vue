@@ -35,7 +35,7 @@
           ></el-input>
         </el-form-item>
 
-        <el-form-item label="验证码" prop="code" v-if="showVerificationCode">
+        <el-form-item label="验证码" prop="code">
           <el-input v-model="form.code" placeholder="请输入验证码" data-test="code-input">
             <template #append>
               <el-button :disabled="countdown > 0" @click="handleSendCode" data-test="send-code-button">
@@ -114,16 +114,21 @@ export default {
 
     const handleSendCode = async () => {
       try {
-        const response = await api.post("https://auth-api-nvdempim.fly.dev/api/auth/resend-verification", {
+        if (!form.email) {
+          ElMessage.error('请先输入邮箱地址');
+          return;
+        }
+        const response = await api.post('/resend-verification', {
           email: form.email,
         });
         if (response.data.status === 200) {
           startCountdown();
-          showVerificationCode.value = true;
           ElMessage.success("验证码已发送，请查收邮件");
         }
       } catch (error) {
-        ElMessage.error("发送验证码失败，请重试");
+        const message = error.response?.data?.message || "发送验证码失败，请重试";
+        ElMessage.error(message);
+        console.error('Send code error:', error.response?.data);
       }
     };
 
@@ -132,16 +137,27 @@ export default {
 
       await registerForm.value.validate(async (valid) => {
         if (valid) {
+          if (!form.code) {
+            ElMessage.error('请先获取并输入验证码');
+            return;
+          }
+
           loading.value = true;
           try {
-            const response = await api.post("https://auth-api-nvdempim.fly.dev/api/auth/register", form);
+            const response = await api.post('/register', form);
             if (response.data.status === 201) {
               ElMessage.success('注册成功');
               await router.push({ path: "/register-success", query: { email: form.email } });
             }
           } catch (error) {
-            const message = error.response?.data?.message || "注册失败，请重试";
+            const errorData = error.response?.data;
+            const message = errorData?.message ||
+              (errorData?.code === 'VERIFICATION_FAILED' ? '验证码错误' :
+               errorData?.code === 'EMAIL_EXISTS' ? '邮箱已被注册' :
+               errorData?.code === 'INVALID_USERNAME' ? '用户名不符合要求' :
+               '注册失败，请重试');
             ElMessage.error(message);
+            console.error('Registration error:', errorData);
           } finally {
             loading.value = false;
           }
