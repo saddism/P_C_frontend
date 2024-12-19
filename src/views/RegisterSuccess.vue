@@ -30,7 +30,7 @@ export default {
           return
         }
 
-        const response = await api.post('/api/auth/resend-verification', { email })
+        const response = await api.post('https://auth-api-nvdempim.fly.dev/api/auth/resend-verification', { email })
         if (response.status === 200) {
           ElMessage.success('验证邮件已重新发送')
         }
