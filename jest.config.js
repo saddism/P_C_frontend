@@ -3,5 +3,6 @@ module.exports = {
   transform: {
     '^.+\\.vue$': '@vue/vue3-jest'
   },
-  testEnvironment: 'jsdom'
+  testEnvironment: 'jsdom',
+  setupFiles: ['<rootDir>/tests/setup.js']
 }
