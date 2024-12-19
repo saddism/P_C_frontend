@@ -29,10 +29,14 @@ const routes = [
     name: "VerifyEmail",
     component: VerifyEmail,
   },
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: "/login"
+  }
 ];
 
 const router = createRouter({
-  history: createWebHistory('/'),
+  history: createWebHistory(),
   routes,
 });
 
