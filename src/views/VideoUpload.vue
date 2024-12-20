@@ -53,10 +53,13 @@
           <el-alert
             title="正在分析视频"
             type="info"
-            description="请耐心等待，系统正在分析视频内容并生成文档..."
+            :description="analysisStatus"
             show-icon
           />
-          <el-progress :percentage="analysisProgress" />
+          <el-progress
+            :percentage="analysisProgress"
+            :status="analysisProgress === 100 ? 'success' : ''"
+          />
         </div>
       </div>
     </el-card>
@@ -68,6 +71,8 @@ import { UploadFilled } from '@element-plus/icons-vue'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import { ElMessage } from 'element-plus'
+import axios from 'axios'
 
 export default {
   name: 'VideoUpload',
@@ -81,6 +86,8 @@ export default {
     const uploadStatus = ref('')
     const analyzing = ref(false)
     const analysisProgress = ref(0)
+    const analysisStatus = ref('')
+    const pollInterval = ref(null)
 
     const isAuthenticated = computed(() => store.state.auth.isAuthenticated)
     const uploadUrl = computed(() => {
@@ -106,30 +113,66 @@ export default {
       return true
     }
 
+    const checkAnalysisStatus = async (videoId) => {
+      try {
+        const baseUrl = process.env.VUE_APP_API_URL || 'https://auth-api-nvdempim.fly.dev'
+        const response = await axios.get(`${baseUrl}/api/videos/${videoId}/status`, {
+          headers: uploadHeaders.value
+        })
+
+        const { status, progress, prd, business_plan } = response.data
+
+        analysisStatus.value = status
+        analysisProgress.value = progress
+
+        if (status === 'completed') {
+          clearInterval(pollInterval.value)
+          analyzing.value = false
+          router.push({
+            path: `/products/${videoId}`,
+            query: {
+              ...router.currentRoute.value.query,
+              prd: encodeURIComponent(prd),
+              business_plan: encodeURIComponent(business_plan)
+            }
+          })
+        } else if (status === 'failed') {
+          clearInterval(pollInterval.value)
+          analyzing.value = false
+          ElMessage.error('视频分析失败，请重试')
+        }
+      } catch (error) {
+        console.error('Analysis status check failed:', error)
+        ElMessage.error('检查分析状态失败')
+      }
+    }
+
     const handleSuccess = (response) => {
       uploadProgress.value = 100
       uploadStatus.value = 'success'
       analyzing.value = true
+      analysisStatus.value = '正在分析视频...'
+      analysisProgress.value = 0
 
-      // Start polling for analysis status
-      const pollInterval = setInterval(() => {
-        // Simulate analysis progress for now
-        if (analysisProgress.value < 100) {
-          analysisProgress.value += 10
-        } else {
-          clearInterval(pollInterval)
+      const videoId = response.videoId
+      pollInterval.value = setInterval(() => {
+        checkAnalysisStatus(videoId)
+      }, 3000)
+
+      setTimeout(() => {
+        if (pollInterval.value) {
+          clearInterval(pollInterval.value)
           analyzing.value = false
-          router.push({
-            path: `/products/${response.productId}`,
-            query: router.currentRoute.value.query
-          })
+          ElMessage.warning('分析时间过长，请稍后在产品列表中查看结果')
+          router.push('/')
         }
-      }, 1000)
+      }, 600000)
     }
 
-    const handleError = () => {
+    const handleError = (error) => {
       uploadStatus.value = 'exception'
-      ElMessage.error('上传失败，请重试')
+      const errorMessage = error.response?.data?.detail || '上传失败，请重试'
+      ElMessage.error(errorMessage)
     }
 
     const handleProgress = (event) => {
@@ -154,6 +197,7 @@ export default {
       uploadStatus,
       analyzing,
       analysisProgress,
+      analysisStatus,
       beforeUpload,
       handleSuccess,
       handleError,
