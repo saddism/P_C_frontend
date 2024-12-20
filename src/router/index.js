@@ -10,22 +10,26 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: Home,
+    meta: { requiresAuth: false }
   },
   {
     path: '/register',
     name: 'Register',
-    component: Register
+    component: Register,
+    meta: { requiresAuth: false }
   },
   {
     path: '/login',
     name: 'Login',
-    component: Login
+    component: Login,
+    meta: { requiresAuth: false }
   },
   {
     path: '/register-success',
     name: 'RegisterSuccess',
-    component: RegisterSuccess
+    component: RegisterSuccess,
+    meta: { requiresAuth: false }
   },
   {
     path: '/upload',
@@ -41,18 +45,28 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  // Preserve mock parameter during navigation
+  const mockEnabled = from.query.mock === '1'
+  const toQuery = { ...to.query }
+
+  if (mockEnabled && !toQuery.mock) {
+    toQuery.mock = '1'
+  }
+
+  // Check authentication for protected routes
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!store.state.auth.isAuthenticated) {
+    const token = localStorage.getItem('token')
+    if (!token) {
       next({
         path: '/login',
-        query: { redirect: to.fullPath, ...to.query }
+        query: { redirect: to.fullPath, ...toQuery }
       })
-    } else {
-      next()
+      return
     }
-  } else {
-    next()
   }
+
+  // Always pass through the query parameters
+  next({ ...to, query: toQuery })
 })
 
 export default router
