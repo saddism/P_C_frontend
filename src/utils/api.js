@@ -7,7 +7,7 @@ export const isMockMode = () => {
 };
 
 export const api = axios.create({
-  baseURL: isMockMode() ? '/api/auth' : BASE_URL + '/api/auth'
+  baseURL: isMockMode() ? '' : BASE_URL
 });
 
 // Add response interceptor to handle common error cases
