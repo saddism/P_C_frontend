@@ -136,13 +136,19 @@ export default {
 
         if (response.data.status === 201) {
           ElMessage.success('注册成功');
-          router.push('/register-success');
+          router.push('/login');
         }
       } catch (error) {
         if (error.response) {
-          const errorDetail = error.response?.data?.detail?.[0] || {};
-          const message = errorDetail.msg || error.response?.data?.message || '注册失败，请重试';
-          ElMessage.error(message);
+          if (error.response.status === 400 && error.response.data?.detail === 'Email already registered') {
+            ElMessage.error('该邮箱已被注册，请使用其他邮箱');
+          } else if (error.response.status === 422) {
+            ElMessage.error('请检查输入格式是否正确');
+          } else {
+            ElMessage.error('注册失败，请稍后重试');
+          }
+        } else {
+          ElMessage.error('注册失败，请稍后重试');
         }
         loading.value = false;
       }

@@ -195,5 +195,23 @@ export const auth = {
       console.error('Resend verification error:', error.response?.data || error);
       throw error;
     }
+  },
+  checkEmailVerification: async (email, useMock = false) => {
+    if (useMock) {
+      console.log('Using mock data for email verification status:', email);
+      return {
+        data: {
+          verified: true
+        }
+      };
+    }
+    try {
+      const response = await apiClient.get(`/api/auth/verify-status/${email}`);
+      console.log('Email verification status response:', response);
+      return response;
+    } catch (error) {
+      console.error('Email verification status error:', error.response?.data || error);
+      throw error;
+    }
   }
 };

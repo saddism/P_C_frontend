@@ -53,6 +53,17 @@ npm run serve
 - API服务：https://auth-api-nvdempim.fly.dev
 - API文档：https://auth-api-nvdempim.fly.dev/docs
 
+## 可访问地址 (Available URLs)
+- 前端开发服务器 (Frontend Development Server): https://user:4b684d96437c0d18d2f3d4e02bbf98b0@video-analysis-app-tunnel-0q6llh7f.devinapps.com
+- API服务 (API Service): https://auth-api-nvdempim.fly.dev
+- API文档 (API Documentation): https://auth-api-nvdempim.fly.dev/docs
+
+## 开发环境访问说明 (Development Access Notes)
+- 前端开发服务器需要使用以下认证信息：
+  - 用户名: user
+  - 密码: 4b684d96437c0d18d2f3d4e02bbf98b0
+- 认证信息已内置在URL中，可直接访问完整URL
+
 ## 重要说明 (Important Notes)
 - 所有API更改均为新增功能，未修改任何现有API
 - 保持与现有认证系统的完全兼容
