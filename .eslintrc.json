@@ -1,0 +1,23 @@
+{
+  "extends": [
+    "plugin:vue/vue3-essential",
+    "eslint:recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
+  "rules": {
+    "vue/multi-word-component-names": "off",
+    "vue/no-unused-vars": "warn",
+    "no-unused-vars": "warn",
+    "vue/no-mutating-props": "warn",
+    "vue/require-v-for-key": "error",
+    "vue/valid-v-model": "error"
+  },
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  }
+}

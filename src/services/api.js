@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'https://auth-api-nvdempim.fly.dev';
+const apiClient = axios.create({ baseURL: API_BASE_URL });
 
 export const api = {
   async getProducts(useMock = false) {
@@ -89,4 +90,10 @@ export const api = {
     }
     return axios.get(`${API_BASE_URL}/api/testimonials`);
   }
+};
+
+export const auth = {
+  register: (data) => apiClient.post('/api/auth/register', data),
+  verifyEmail: (data) => apiClient.post('/api/auth/verify-email', data),
+  resendVerification: (data) => apiClient.post('/api/auth/resend-verification', data)
 };

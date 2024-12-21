@@ -49,7 +49,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import axios from 'axios'
+import { auth } from '@/services/api'
 
 export default {
   name: 'Register',
@@ -98,7 +98,7 @@ export default {
 
     const handleSendCode = async () => {
       try {
-        const response = await axios.post('/api/auth/resend-verification', {
+        const response = await auth.resendVerification({
           email: form.email
         })
         if (response.data.status === 200) {
@@ -118,7 +118,7 @@ export default {
         if (valid) {
           loading.value = true
           try {
-            const response = await axios.post('/api/auth/register', form)
+            const response = await auth.register(form)
             if (response.data.status === 201) {
               router.push('/register-success')
             }

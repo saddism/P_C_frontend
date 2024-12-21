@@ -51,6 +51,8 @@ router.beforeEach((to, from, next) => {
 
   if (mockEnabled && !toQuery.mock) {
     toQuery.mock = '1'
+    next({ ...to, query: toQuery })
+    return
   }
 
   // Check authentication for protected routes
@@ -65,8 +67,8 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // Always pass through the query parameters
-  next({ ...to, query: toQuery })
+  // Only pass modified query if we have changes
+  next()
 })
 
 export default router

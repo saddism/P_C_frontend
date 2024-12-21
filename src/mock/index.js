@@ -4,8 +4,10 @@ import './video.mock'
 // Enable mock based on URL parameter
 const enableMock = new URLSearchParams(window.location.search).get('mock') === '1'
 
+// Configure mock behavior based on URL parameter
+Mock.setup({ timeout: '200-600' })
 if (!enableMock) {
-  Mock.restore() // Disable all mock if mock=1 is not present
+  // No need to reset mocks, just don't define them
 } else {
   // 注册接口
   Mock.mock('/api/auth/register', 'post', (options) => {
