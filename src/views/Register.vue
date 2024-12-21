@@ -74,15 +74,20 @@ export default {
       ],
       username: [
         { required: true, message: '请输入用户名', trigger: 'blur' },
-        { min: 3, max: 20, message: '用户名长度在3到20个字符之间', trigger: 'blur' }
+        { min: 3, max: 20, message: '用户名长度在3到20个字符之间', trigger: 'blur' },
+        { pattern: /^[a-zA-Z0-9_-]+$/, message: '用户名只能包含字母、数字、下划线和连字符', trigger: 'blur' }
       ],
       password: [
         { required: true, message: '请输入密码', trigger: 'blur' },
-        { min: 8, message: '密码长度至少为8个字符', trigger: 'blur' }
+        { min: 8, message: '密码长度至少为8个字符', trigger: 'blur' },
+        { pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]+$/, message: '密码必须包含字母和数字', trigger: 'blur' }
       ],
       code: [
-        { required: true, message: '请输入验证码', trigger: 'blur' },
-        { len: 6, message: '验证码长度为6位', trigger: 'blur' }
+        { required: () => showVerificationCode.value, message: '请输入验证码', trigger: 'blur' },
+        { len: 6, message: '验证码长度为6位', trigger: 'blur', validator: (rule, value, callback) => {
+          if (!showVerificationCode.value || (value && value.length === 6)) callback();
+          else callback(new Error('验证码长度为6位'));
+        }}
       ]
     }
 
@@ -98,38 +103,49 @@ export default {
 
     const handleSendCode = async () => {
       try {
+        const useMock = window.location.search.includes('mock=1');
         const response = await auth.resendVerification({
           email: form.email
-        })
+        }, useMock);
         if (response.data.status === 200) {
-          startCountdown()
-          showVerificationCode.value = true
-          ElMessage.success('验证码已发送，请查收邮件')
+          startCountdown();
+          showVerificationCode.value = true;
+          ElMessage.success('验证码已发送，请查收邮件');
         }
       } catch (error) {
-        ElMessage.error('发送验证码失败，请重试')
+        ElMessage.error('发送验证码失败，请重试');
       }
     }
 
     const handleRegister = async () => {
-      if (!registerForm.value) return
+      if (!registerForm.value) return;
 
-      await registerForm.value.validate(async (valid) => {
-        if (valid) {
-          loading.value = true
-          try {
-            const response = await auth.register(form)
-            if (response.data.status === 201) {
-              router.push('/register-success')
-            }
-          } catch (error) {
-            const message = error.response?.data?.message || '注册失败，请重试'
-            ElMessage.error(message)
-          } finally {
-            loading.value = false
-          }
+      // Only validate code field if verification code is shown
+      const fieldsToValidate = showVerificationCode.value ? ['email', 'username', 'password', 'code'] : ['email', 'username', 'password'];
+
+      try {
+        await registerForm.value.validateField(fieldsToValidate);
+        loading.value = true;
+
+        const useMock = window.location.search.includes('mock=1');
+        const response = await auth.register({
+          email: form.email,
+          username: form.username,
+          password: form.password
+        }, useMock);
+
+        if (response.data.status === 201) {
+          ElMessage.success('注册成功');
+          router.push('/register-success');
         }
-      })
+      } catch (error) {
+        if (error.response) {
+          const errorDetail = error.response?.data?.detail?.[0] || {};
+          const message = errorDetail.msg || error.response?.data?.message || '注册失败，请重试';
+          ElMessage.error(message);
+        }
+        loading.value = false;
+      }
     }
 
     return {

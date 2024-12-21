@@ -1,7 +1,50 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'https://auth-api-nvdempim.fly.dev';
-const apiClient = axios.create({ baseURL: API_BASE_URL });
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
+
+// Add request interceptor for debugging
+apiClient.interceptors.request.use(
+  config => {
+    console.log('API Request:', {
+      url: config.url,
+      method: config.method,
+      data: config.data,
+      headers: config.headers
+    });
+    return config;
+  },
+  error => {
+    console.error('Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for better error handling
+apiClient.interceptors.response.use(
+  response => {
+    console.log('API Response:', {
+      status: response.status,
+      data: response.data,
+      headers: response.headers
+    });
+    return response;
+  },
+  error => {
+    console.error('API Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    return Promise.reject(error);
+  }
+);
 
 export const api = {
   async getProducts(useMock = false) {
@@ -93,7 +136,64 @@ export const api = {
 };
 
 export const auth = {
-  register: (data) => apiClient.post('/api/auth/register', data),
-  verifyEmail: (data) => apiClient.post('/api/auth/verify-email', data),
-  resendVerification: (data) => apiClient.post('/api/auth/resend-verification', data)
+  register: async (data, useMock = false) => {
+    if (useMock) {
+      console.log('Using mock data for registration:', data);
+      return {
+        data: {
+          status: 201,
+          message: '注册成功',
+          data: {
+            email: data.email,
+            username: data.username
+          }
+        }
+      };
+    }
+    try {
+      console.log('Sending registration request:', data);
+      const response = await apiClient.post('/api/auth/register', data);
+      return response;
+    } catch (error) {
+      console.error('Registration error:', error.response?.data || error);
+      throw error;
+    }
+  },
+  verifyEmail: async (data, useMock = false) => {
+    if (useMock) {
+      console.log('Using mock data for email verification:', data);
+      return {
+        data: {
+          status: 200,
+          message: '邮箱验证成功'
+        }
+      };
+    }
+    try {
+      const response = await apiClient.post('/api/auth/verify-email', data);
+      console.log('Email verification response:', response);
+      return response;
+    } catch (error) {
+      console.error('Email verification error:', error.response?.data || error);
+      throw error;
+    }
+  },
+  resendVerification: async (data, useMock = false) => {
+    if (useMock) {
+      return {
+        data: {
+          status: 200,
+          message: '验证码已发送'
+        }
+      };
+    }
+    try {
+      const response = await apiClient.post('/api/auth/resend-verification', data);
+      console.log('Resend verification response:', response);
+      return response;
+    } catch (error) {
+      console.error('Resend verification error:', error.response?.data || error);
+      throw error;
+    }
+  }
 };
